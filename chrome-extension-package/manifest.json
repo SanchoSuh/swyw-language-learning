@@ -9,7 +9,8 @@
     "scripting"
   ],
   "host_permissions": [
-    "https://oynqufsrtensdvgkflub.supabase.co/*"
+    "https://oynqufsrtensdvgkflub.supabase.co/*",
+    "https://extraordinary-granita-59f6fd.netlify.app/*"
   ],
   "action": {
     "default_popup": "popup.html",

@@ -120,7 +120,7 @@ class SWYWPopup {
 
   openApp() {
     // Open the SWYW web app for authentication
-    chrome.tabs.create({ url: 'http://localhost:5173' });
+    chrome.tabs.create({ url: 'https://extraordinary-granita-59f6fd.netlify.app/' });
   }
 
   setLoading(isLoading) {
