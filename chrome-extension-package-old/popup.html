@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SWYW - Save Word</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 350px;
+      min-height: 400px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+    }
+
+    .header {
+      background: #1976d2;
+      color: white;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #1976d2;
+      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #1976d2;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #1565c0;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #d1d5db;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .success-message {
+      background: #dcfce7;
+      color: #166534;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .error-message {
+      background: #fef2f2;
+      color: #dc2626;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .auth-prompt {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .auth-prompt h2 {
+      color: #374151;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    .auth-prompt p {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .selected-text {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #1e40af;
+      margin-bottom: 12px;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>SWYW</h1>
+    <p>Save words for language learning</p>
+  </div>
+
+  <div class="content">
+    <div id="auth-prompt" class="auth-prompt" style="display: none;">
+      <h2>Sign in Required</h2>
+      <p>Please sign in to your SWYW account to save words and phrases.</p>
+      <button id="open-app" class="btn-primary">Open SWYW App</button>
+    </div>
+
+    <div id="main-form" style="display: none;">
+      <div id="success-message" class="success-message" style="display: none;">
+        Word saved successfully!
+      </div>
+      
+      <div id="error-message" class="error-message" style="display: none;"></div>
+
+      <div id="selected-text-display" class="selected-text" style="display: none;">
+        <strong>Selected text:</strong> <span id="selected-text"></span>
+      </div>
+
+      <form id="word-form">
+        <div class="form-group">
+          <label for="word-input">Word or Phrase *</label>
+          <input type="text" id="word-input" placeholder="Enter the word or phrase to memorize" required>
+        </div>
+
+        <div class="form-group">
+          <label for="meaning-input">Meaning (Optional)</label>
+          <input type="text" id="meaning-input" placeholder="Enter the meaning of the word or phrase">
+        </div>
+
+        <div class="form-group">
+          <label for="example-input">Example Sentence (Optional)</label>
+          <textarea id="example-input" placeholder="Enter an example sentence using this word or phrase"></textarea>
+        </div>
+
+        <div class="button-group">
+          <button type="button" id="clear-btn" class="btn-secondary">Clear</button>
+          <button type="submit" id="save-btn" class="btn-primary">
+            <span id="save-text">Save</span>
+            <div id="save-loading" class="loading" style="display: none;"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
