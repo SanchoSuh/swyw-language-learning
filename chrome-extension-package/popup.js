@@ -33,30 +33,37 @@ class SWYWPopup {
 
   async checkAuth() {
     try {
+      console.log('🔐 Starting authentication check...')
+      
       // First check if user session exists in Chrome storage
       const result = await chrome.storage.local.get(['userSession']);
       this.user = result.userSession;
+      console.log('🔍 Existing user session:', !!this.user)
       
       // If no session in storage, try to detect from open SWYW web app tabs
       if (!this.user) {
+        console.log('🔍 No existing session, detecting from open tabs...')
         await this.detectLoginFromOpenTabs();
       }
       
       // Always try to get fresh auth state from open tabs
+      console.log('🔍 Updating auth state from open tabs...')
       await this.updateAuthFromOpenTabs();
       
       const authPrompt = document.getElementById('auth-prompt');
       const mainForm = document.getElementById('main-form');
 
       if (!this.user) {
+        console.log('❌ No user session, showing auth prompt')
         authPrompt.style.display = 'block';
         mainForm.style.display = 'none';
       } else {
+        console.log('✅ User session found, showing main form')
         authPrompt.style.display = 'none';
         mainForm.style.display = 'block';
       }
     } catch (error) {
-      console.error('Error checking auth:', error);
+      console.error('❌ Error checking auth:', error);
       // Default to showing auth prompt on error
       document.getElementById('auth-prompt').style.display = 'block';
       document.getElementById('main-form').style.display = 'none';
@@ -65,30 +72,44 @@ class SWYWPopup {
 
   async detectLoginFromOpenTabs() {
     try {
+      console.log('🔍 Starting login detection from open tabs...')
+      
       // Find any open tabs with the SWYW web app
       const tabs = await chrome.tabs.query({
         url: 'https://extraordinary-granita-59f6fd.netlify.app/*'
       });
-
+      
+      console.log('📑 Found SWYW tabs:', tabs.length)
+      
       if (tabs.length > 0) {
         // Check the first SWYW tab for login status
         const tab = tabs[0];
+        console.log('🔍 Checking tab:', tab.id, tab.url)
+        
         try {
           const results = await chrome.scripting.executeScript({
             target: { tabId: tab.id },
             function: () => {
+              console.log('🔍 Executing auth check script in tab...')
+              
               // Function to check authentication state
               function checkAuthState() {
+                console.log('🔍 Checking authentication state...')
+                
                 // Check for Supabase auth token
-                const supabaseToken = localStorage.getItem('supabase.auth.token');
+                const supabaseToken = localStorage.getItem('supabase.auth.token')
+                console.log('🔍 Supabase token found:', !!supabaseToken)
+                
                 if (supabaseToken) {
                   try {
                     const parsed = JSON.parse(supabaseToken);
+                    console.log('🔍 Parsed token:', parsed)
                     if (parsed && parsed.access_token) {
+                      console.log('✅ Valid Supabase token found')
                       return { authenticated: true, token: parsed };
                     }
                   } catch (e) {
-                    console.log('Failed to parse Supabase token');
+                    console.log('❌ Failed to parse Supabase token:', e)
                   }
                 }
                 
@@ -102,30 +123,44 @@ class SWYWPopup {
                 
                 for (const tokenKey of possibleTokens) {
                   const token = localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey);
+                  console.log(`🔍 Checking ${tokenKey}:`, !!token)
                   if (token) {
                     try {
                       const parsed = JSON.parse(token);
                       if (parsed && (parsed.user || parsed.access_token || parsed.id)) {
+                        console.log(`✅ Valid token found in ${tokenKey}`)
                         return { authenticated: true, token: parsed };
                       }
                     } catch (e) {
-                      // Continue to next token
+                      console.log(`❌ Failed to parse ${tokenKey}:`, e)
                     }
                   }
                 }
                 
                 // Check for user elements in DOM
                 const userElements = document.querySelectorAll('[data-user], [data-user-id], .user-info, .profile, .user-menu');
+                console.log('🔍 User elements found:', userElements.length)
                 if (userElements.length > 0) {
+                  console.log('✅ User elements found in DOM')
                   return { authenticated: true, source: 'DOM' };
                 }
                 
                 // Check for logout buttons (indicates user is logged in)
                 const logoutButtons = document.querySelectorAll('button[onclick*="logout"], button[onclick*="signout"], .logout, .sign-out');
+                console.log('🔍 Logout buttons found:', logoutButtons.length)
                 if (logoutButtons.length > 0) {
+                  console.log('✅ Logout button found - user is logged in')
                   return { authenticated: true, source: 'logout_button' };
                 }
                 
+                // Check for any text content that might indicate logged in state
+                const pageText = document.body.textContent || '';
+                if (pageText.includes('Sign Out') || pageText.includes('Logout') || pageText.includes('Sign out')) {
+                  console.log('✅ Found sign out text in page')
+                  return { authenticated: true, source: 'page_text' };
+                }
+                
+                console.log('❌ No authentication indicators found')
                 return { authenticated: false };
               }
               
@@ -134,22 +169,27 @@ class SWYWPopup {
           });
 
           const userSession = results[0]?.result;
+          console.log('🔍 Auth check result:', userSession)
           
           if (userSession?.authenticated) {
             // Store the session in Chrome extension storage
             await chrome.storage.local.set({ userSession });
             this.user = userSession;
-            console.log('Login detected from open tab');
+            console.log('✅ Login detected from open tab')
             return true;
+          } else {
+            console.log('❌ No authentication detected')
           }
         } catch (error) {
-          console.log('Could not check login status from tab:', error);
+          console.error('❌ Error checking login status from tab:', error)
         }
+      } else {
+        console.log('❌ No SWYW tabs found')
       }
       
       return false;
     } catch (error) {
-      console.error('Error detecting login from open tabs:', error);
+      console.error('❌ Error detecting login from open tabs:', error);
       return false;
     }
   }

@@ -72,21 +72,42 @@ export const WordsList: React.FC = () => {
   }
 
   const handleSignOut = async () => {
+    console.log('Sign out button clicked')
     try {
+      console.log('Attempting to sign out from Supabase...')
       const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      if (error) {
+        console.error('Supabase sign out error:', error)
+        throw error
+      }
+      console.log('Successfully signed out from Supabase')
       
       // Clear any local storage/session storage
+      console.log('Clearing local storage...')
       localStorage.removeItem('supabase.auth.token')
       sessionStorage.removeItem('supabase.auth.token')
       localStorage.removeItem('userSession')
       sessionStorage.removeItem('userSession')
       
+      // Also clear any other auth-related items
+      const keysToRemove = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && (key.includes('supabase') || key.includes('auth') || key.includes('user'))) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key))
+      
+      console.log('Local storage cleared')
+      
       // Redirect to login page or reload the page
+      console.log('Redirecting to home page...')
       window.location.href = '/'
     } catch (error: any) {
       console.error('Error signing out:', error)
       // Still redirect even if there's an error
+      console.log('Redirecting despite error...')
       window.location.href = '/'
     }
   }
@@ -120,6 +141,7 @@ export const WordsList: React.FC = () => {
             <button
               onClick={handleSignOut}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              style={{ cursor: 'pointer' }}
             >
               <LogOut size={20} className="mr-2" />
               Sign Out
