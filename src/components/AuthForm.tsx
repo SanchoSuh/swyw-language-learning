@@ -20,20 +20,31 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        console.log('Attempting to sign in with email:', email)
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
-        if (error) throw error
+        if (error) {
+          console.error('Sign in error:', error)
+          throw error
+        }
+        console.log('Sign in successful:', data.user?.email)
       } else {
-        const { error } = await supabase.auth.signUp({
+        console.log('Attempting to sign up with email:', email)
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         })
-        if (error) throw error
+        if (error) {
+          console.error('Sign up error:', error)
+          throw error
+        }
+        console.log('Sign up successful:', data.user?.email)
       }
       onAuthSuccess()
     } catch (error: any) {
+      console.error('Authentication error:', error)
       setError(error.message)
     } finally {
       setLoading(false)

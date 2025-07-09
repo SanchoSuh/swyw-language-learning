@@ -3,7 +3,11 @@ import { supabase, Word } from '../lib/supabase'
 import { WordCard } from './WordCard'
 import { BookOpen, Plus, Search, LogOut } from 'lucide-react'
 
-export const WordsList: React.FC = () => {
+interface WordsListProps {
+  onSignOut: () => Promise<void>
+}
+
+export const WordsList: React.FC<WordsListProps> = ({ onSignOut }) => {
   const [words, setWords] = useState<Word[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -74,41 +78,10 @@ export const WordsList: React.FC = () => {
   const handleSignOut = async () => {
     console.log('Sign out button clicked')
     try {
-      console.log('Attempting to sign out from Supabase...')
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error('Supabase sign out error:', error)
-        throw error
-      }
-      console.log('Successfully signed out from Supabase')
-      
-      // Clear any local storage/session storage
-      console.log('Clearing local storage...')
-      localStorage.removeItem('supabase.auth.token')
-      sessionStorage.removeItem('supabase.auth.token')
-      localStorage.removeItem('userSession')
-      sessionStorage.removeItem('userSession')
-      
-      // Also clear any other auth-related items
-      const keysToRemove = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && (key.includes('supabase') || key.includes('auth') || key.includes('user'))) {
-          keysToRemove.push(key)
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key))
-      
-      console.log('Local storage cleared')
-      
-      // Redirect to login page or reload the page
-      console.log('Redirecting to home page...')
-      window.location.href = '/'
+      await onSignOut()
+      console.log('Sign out completed successfully')
     } catch (error: any) {
-      console.error('Error signing out:', error)
-      // Still redirect even if there's an error
-      console.log('Redirecting despite error...')
-      window.location.href = '/'
+      console.error('Error during sign out:', error)
     }
   }
 
