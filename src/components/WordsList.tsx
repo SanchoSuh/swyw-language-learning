@@ -72,7 +72,23 @@ export const WordsList: React.FC = () => {
   }
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
+      // Clear any local storage/session storage
+      localStorage.removeItem('supabase.auth.token')
+      sessionStorage.removeItem('supabase.auth.token')
+      localStorage.removeItem('userSession')
+      sessionStorage.removeItem('userSession')
+      
+      // Redirect to login page or reload the page
+      window.location.href = '/'
+    } catch (error: any) {
+      console.error('Error signing out:', error)
+      // Still redirect even if there's an error
+      window.location.href = '/'
+    }
   }
 
   const filteredWords = words.filter(word =>
